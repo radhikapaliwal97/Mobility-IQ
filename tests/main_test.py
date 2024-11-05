@@ -129,7 +129,7 @@ def test_get_users():
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
-    assert data[0]["firstname"] == "Alice
+    assert data[0]["firstname"] == "Alice"
 
 
 def test_delete_user():
