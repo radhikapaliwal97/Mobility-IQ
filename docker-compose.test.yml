@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  test_db:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5433:5432"
+    networks:
+      - test_network
+
+  test:
+    build: .    
+    command: sh -c "PYTHONPATH=/app pytest -v tests/"
+    env_file:
+      - test.env  
+    depends_on:
+      - test_db
+    networks:
+      - test_network
+
+networks:
+  test_network:
+    driver: bridge
