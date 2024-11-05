@@ -72,3 +72,62 @@ def test_create_user():
     assert data["age"] == 28
     assert data["date_of_birth"] == "1995-02-20"
     assert "id" in data
+
+
+def test_create_user_missing_fields():
+    """
+    Test creating a user with missing required fields.
+    Should return a 422 Unprocessable Entity error.
+    """
+    response = client.post(
+        "/users",
+        json={
+            "firstname": "Bob",
+            # "lastname" is missing
+            "age": 25,
+            "date_of_birth": "1998-03-15",
+        },
+    )
+    assert response.status_code == 422
+    data = response.json()
+    assert any(
+        error["loc"] == ["body", "lastname"] and error["msg"] == "Field required"
+        for error in data["detail"]
+    )
+
+
+def test_create_user_invalid_age():
+    """
+    Test creating a user with invalid age (negative number).
+    Should return a 422 Unprocessable Entity error.
+    """
+    response = client.post(
+        "/users",
+        json={
+            "firstname": "Charlie",
+            "lastname": "Brown",
+            "age": -5,  # Invalid age
+            "date_of_birth": "2000-05-10",
+        },
+    )
+    assert response.status_code == 422
+    data = response.json()
+    
+    assert any(
+        error["loc"] == ["body", "age"]
+        and "Input should be greater than or equal to 0" in error["msg"]
+        for error in data["detail"]
+    )
+
+
+def test_get_users():
+    """
+    Test retrieving all users.
+    """
+    # Create a user first
+    test_create_user()
+    response = client.get("/users")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["firstname"] == "Alice"
