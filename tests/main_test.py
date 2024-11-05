@@ -112,7 +112,6 @@ def test_create_user_invalid_age():
     )
     assert response.status_code == 422
     data = response.json()
-    
     assert any(
         error["loc"] == ["body", "age"]
         and "Input should be greater than or equal to 0" in error["msg"]
@@ -130,4 +129,35 @@ def test_get_users():
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
-    assert data[0]["firstname"] == "Alice"
+    assert data[0]["firstname"] == "Alice
+
+
+def test_delete_user():
+    """
+    Test deleting a user.
+    """
+    # Create a user first
+    test_create_user()
+    # Get the user's ID
+    response = client.get("/users")
+    user_id = response.json()[0]["id"]
+    # Delete the user
+    response = client.delete(f"/users/{user_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["detail"] == f"User with id {user_id} deleted"
+    # Ensure the user is deleted
+    response = client.get("/users")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 0
+
+
+def test_delete_nonexistent_user():
+    """
+    Test deleting a user that does not exist.
+    """
+    response = client.delete("/users/999")
+    assert response.status_code == 404
+    data = response.json()
+    assert data["detail"] == "User with id 999 not found"

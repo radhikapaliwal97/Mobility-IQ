@@ -3,7 +3,7 @@ This module initializes the FastAPI app, handles dependencies, and defines the A
 """
 
 from typing import List
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 import models, schemas
 from database import engine, get_db
@@ -42,3 +42,19 @@ def get_users(db: Session = Depends(get_db)) -> List[schemas.User]:
     """
     users = db.query(models.User).all()
     return users
+
+
+@app.delete("/users/{user_id}", response_model=dict)
+def delete_user(
+    user_id: int = Path(..., description="ID of the user to delete", ge=1),
+    db: Session = Depends(get_db),
+) -> dict:
+    """
+    Delete a user from the database by ID.
+    """
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
+    db.delete(user)
+    db.commit()
+    return {"detail": f"User with id {user_id} deleted"}
